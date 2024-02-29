@@ -66,21 +66,22 @@ y = torch.tensor(y, dtype=torch.float32)
 
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-print('----------------------------------------------')
-print('This is len x-train', len(X_train))
-print('This is len x-test', len(X_test))
-print('This is len y-train', len(y_train))
-print('This is len y-test', len(y_test))
-print('----------------------------------------------')
+
 
 # Instantiate the model
 input_size = X.shape[2]             #* X.shape [(batch_size) - number of sequences, (sequence_len) - how much in 1 individual sequence, (num_features) - columns of data ] 
 # how many nodes are in the hidden player
-hidden_size = 50
+hidden_size = 100
 # what the output value will be which is 1 scalar value
 output_size = 1
 # create the model using our class defintion 
 model = LSTM(input_size, hidden_size, output_size)
+
+# checking for GPU availability
+component = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+model = model.to(component)
+X_train = X_train.to(component)
+y_train = y_train.to(component)
 
 # print('---------------------------')
 # print(input_size)
@@ -101,7 +102,7 @@ padX = pad_sequence([X_train[i:i+timeStep] for i in range(0, len(X_train), timeS
 padY = pad_sequence([y_train[i:i+timeStep] for i in range(0, len(y_train), timeStep)], batch_first=True)
 
 #* the amount of times the entire dataset is used 
-num_epochs = 50
+num_epochs = 20
 for epoch in range(num_epochs):
     # set to train mode 
     model.train()
@@ -127,8 +128,12 @@ for epoch in range(num_epochs):
     average_loss = total_loss / (len(X_train) // timeStep)
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {average_loss}')
 
+X_test = X_test.to(component)
+y_test = y_test.to(component)
+
 testX = pad_sequence([X_test[i:i+timeStep] for i in range(0, len(X_test), timeStep)], batch_first=True)
 testY = pad_sequence([y_test[i:i+timeStep] for i in range(0, len(y_test), timeStep)], batch_first=True)
+
 
 # Evaluate the model
 model.eval()                                            #* explicity set the mode to evaluation
