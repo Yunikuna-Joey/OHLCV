@@ -65,12 +65,12 @@ y = torch.tensor(y, dtype=torch.float32)
 
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-# print('----------------------------------------------')
+print('----------------------------------------------')
 print('This is len x-train', len(X_train))
-print('This is len', len(X_test))
-print('This is len', len(y_train))
-print('This is len', len(y_test))
-# print('----------------------------------------------')
+print('This is len x-test', len(X_test))
+print('This is len y-train', len(y_train))
+print('This is len y-test', len(y_test))
+print('----------------------------------------------')
 
 # Instantiate the model
 input_size = X.shape[2]             #* X.shape [(batch_size) - number of sequences, (sequence_len) - how much in 1 individual sequence, (num_features) - columns of data ] 
@@ -81,6 +81,9 @@ output_size = 1
 # create the model using our class defintion 
 model = LSTM(input_size, hidden_size, output_size)
 
+# print('---------------------------')
+# print(input_size)
+# print('---------------------------')
 
 # Define loss function and optimizer
 criterion = nn.BCELoss()            # *Binary Cross Entropy loss measures the difference between predicted probabilities (scores) and the actual binary label. 
@@ -91,29 +94,59 @@ criterion = nn.BCELoss()            # *Binary Cross Entropy loss measures the di
 optimizer = optim.Adam(model.parameters(), lr=0.001)        #* lr = learning rate... lower the value = slower, but stable training... [smaller jumps]
                                                             #* it adjusts how much the model learns from each mistake and how quickly it adjusts its guesses
 
+batch = 621
 # Train the model
-num_epochs = 10                 #* number of times the entire dataset is used
+# num_epochs = 10                 #* number of times the entire dataset is used
+# for epoch in range(num_epochs):
+#     # explicit setting of the module in training mode
+#     model.train()
+#     # clear the gradient in optimizer before moving onto the next epoch
+#     optimizer.zero_grad()
+    
+#     # passes the normalizd data into the model
+#     output = model(X_train)
+#     print('This is output', output)
+    
+#     # calculate the loss between the model predicted output ['output'] against the y_train list [already consists of the true binary answers] [answer sheet]
+#     loss = criterion(output.squeeze(), y_train)         #* squeeze seems to be maintenance [when we expect scalar values, sometimes training will output list of lists [[1], [0], [0], etc]] 
+#                                                         #* squeeze will remove the list of lists to ensure we get scalar values [example]
+#     # calculates how each parameter should be adjusted to decrease the loss ['gradient']
+#     loss.backward()                                     #* loss gradient ?= parameter values == weights [multiply] and biases [add]
+#                                                         #* loss gradient represents how much the loss function changes as each parameter of the model changes
+    
+#     # Updates the parameter values(?) based on the computed loss gradients using the optimization algorithm defined by optimizer
+#     optimizer.step()                                    #* the optimization algorithm uses the loss gradients to make its decision on how to optimize its decision making
+#                                                         #* the algorithm uses the gradients internally 
+#     # status throughout each epoch
+#     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item()}')
+num_epochs = 10
 for epoch in range(num_epochs):
-    # explicit setting of the module in training mode
     model.train()
-    # clear the gradient in optimizer before moving onto the next epoch
     optimizer.zero_grad()
+    total_loss = 0
     
-    # passes the normalizd data into the model
-    output = model(X_train)
-    
-    # calculate the loss between the model predicted output ['output'] against the y_train list [already consists of the true binary answers] [answer sheet]
-    loss = criterion(output.squeeze(), y_train)         #* squeeze seems to be maintenance [when we expect scalar values, sometimes training will output list of lists [[1], [0], [0], etc]] 
-                                                        #* squeeze will remove the list of lists to ensure we get scalar values [example]
-    # calculates how each parameter should be adjusted to decrease the loss ['gradient']
-    loss.backward()                                     #* loss gradient ?= parameter values == weights [multiply] and biases [add]
-                                                        #* loss gradient represents how much the loss function changes as each parameter of the model changes
-    
-    # Updates the parameter values(?) based on the computed loss gradients using the optimization algorithm defined by optimizer
-    optimizer.step()                                    #* the optimization algorithm uses the loss gradients to make its decision on how to optimize its decision making
-                                                        #* the algorithm uses the gradients internally 
-    # status throughout each epoch
-    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {loss.item()}')
+    # Iterate over batches of X_train and y_train
+    for i in range(0, len(X_train), timeStep):  # Slice with timeStep
+        # Get batch of input and target data
+        batch_X = X_train[i:i+timeStep]
+        batch_y = y_train[i:i+timeStep]
+
+        # Forward pass
+        output = model(batch_X)
+        
+        # Calculate loss for this batch
+        loss = criterion(output.squeeze(), batch_y)
+        total_loss += loss.item()
+        
+        # Backward pass
+        loss.backward()
+        
+        # Update parameters
+        optimizer.step()
+        
+    # Print average loss for the epoch
+    average_loss = total_loss / (len(X_train) // timeStep)
+    print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {average_loss}')
 
 # Evaluate the model
 model.eval()                                            #* explicity set the mode to evaluation
