@@ -66,8 +66,10 @@ y = torch.tensor(y, dtype=torch.float32)
 # Split the data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 # print('----------------------------------------------')
-# print('This is y len:', len(y))
-# print('This is y-train-len:', (len(y_train)))
+print('This is len x-train', len(X_train))
+print('This is len', len(X_test))
+print('This is len', len(y_train))
+print('This is len', len(y_test))
 # print('----------------------------------------------')
 
 # Instantiate the model
