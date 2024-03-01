@@ -65,7 +65,7 @@ X = torch.tensor(X, dtype=torch.float32)            # normalized df[open, high, 
 y = torch.tensor(y, dtype=torch.float32)
 
 # Split the data into training and testing sets
-Xtrain, X_test, ytrain, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+Xtrain, Xeval, ytrain, yeval = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Instantiate the model
 input_size = X.shape[2]             #* X.shape [(batch_size) - number of sequences, (sequence_len) - how much in 1 individual sequence, (num_features) - columns of data ] 
@@ -123,11 +123,11 @@ for epoch in range(num_epochs):
     average_loss = total_loss / (len(X_train) // timeStep)
     print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {average_loss}')
 
-X_test = X_test.to(component)
-y_test = y_test.to(component)
+Xeval = Xeval.to(component)
+yeval = yeval.to(component)
 
-testX = pad_sequence([X_test[i:i+timeStep] for i in range(0, len(X_test), timeStep)], batch_first=True)
-testY = pad_sequence([y_test[i:i+timeStep] for i in range(0, len(y_test), timeStep)], batch_first=True)
+testX = pad_sequence([Xeval[i:i+timeStep] for i in range(0, len(Xeval), timeStep)], batch_first=True)
+testY = pad_sequence([yeval[i:i+timeStep] for i in range(0, len(yeval), timeStep)], batch_first=True)
 
 # Evaluate the model
 model.eval()                                            #* explicity set the mode to evaluation
@@ -154,6 +154,6 @@ with torch.no_grad():
         totSample += len(batch_y)
     
     # prints loss and accuracy
-    average_test_loss = test_loss / (len(X_test) // timeStep)
+    average_test_loss = test_loss / (len(Xeval) // timeStep)
     accuracy = correct / totSample
     print(f'Test Loss: {average_test_loss}, Test Accuracy: {accuracy}%')
