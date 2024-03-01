@@ -28,7 +28,7 @@ class LSTM(nn.Module):
         # the output of lstm contains the features for each time step, '_' contains the hidden state and cell state (not used) 
         lstmOut, _ = self.lstm(input)
         # applies the fc layer to the output of lstm layer @ the last time step
-        output = self.fc(lstmOut[:, -1, :])
+        output = self.fc(lstmOut[-1])
         # apply the sigmoid function to squash the values to the range [0, 1]
         output = self.sigmoid(output)
 
@@ -94,7 +94,8 @@ yData = yTrain.to(component)
 # pad to match lengths of input and output 
 padX = pad_sequence([xData[i:i+timeStep] for i in range(0, len(xData), timeStep)], batch_first=True)
 padY = pad_sequence([yData[i:i+timeStep] for i in range(0, len(yData), timeStep)], batch_first=True)
-
+print(f'pad x size {padX.size()}')
+print(f'pad y size {padY.size()}')
 
 # define loss function and optimizer 
 criterion = nn.BCELoss()
@@ -108,16 +109,14 @@ for epoch in range(epochNum):
     totLoss = 0
 
     for xBatch, yBatch in zip(padX, padY): 
-        print(f'This is xBatch {xBatch}')
-        print(f'This is yBatch {yBatch}')
+        # print(f'This is xBatch {xBatch}')
+        # print(f'This is yBatch {yBatch}')
         # forward pass the normalized data
         output = model(xBatch)
-        output = output.unsqueeze(0)
-        output = output.unsqueeze(0)
-        
+        print(f'This is output {output}')
         print(f'This is output shape {output.shape}')
         # calculate the loss between model prediction and real prediction
-        loss = criterion(output, yBatch.unsqueeze(0))
+        loss = criterion(output, yBatch)
         totLoss += loss.item()
         # backward pass [calculate the loss gradient]
         loss.backward()
