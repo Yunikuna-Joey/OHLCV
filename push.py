@@ -58,7 +58,8 @@ yData = []
 
 for index in range(timestep, len(dataScale)): 
     xData.append(dataScale[index - timestep: index, 0])
-    yData.append(1 if dataScale['Close'].iloc[index + timestep + 1] > dataScale['Close'].iloc[index + timestep] else 0)
+    # yData.append(1 if dataScale['Close'].iloc[index + timestep + 1] > dataScale['Close'].iloc[index + timestep] else 0)
+    yData.append(1 if dataScale)
 
 
 xTrain, yTrain = torch.tensor(xData, dtype=torch.float32), torch.tensor(yData, dtype=torch.float32)
