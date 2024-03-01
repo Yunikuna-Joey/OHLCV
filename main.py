@@ -65,8 +65,7 @@ X = torch.tensor(X, dtype=torch.float32)            # normalized df[open, high, 
 y = torch.tensor(y, dtype=torch.float32)
 
 # Split the data into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
+Xtrain, X_test, ytrain, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
 # Instantiate the model
 input_size = X.shape[2]             #* X.shape [(batch_size) - number of sequences, (sequence_len) - how much in 1 individual sequence, (num_features) - columns of data ] 
@@ -80,12 +79,8 @@ model = LSTM(input_size, hidden_size, output_size)
 # checking for GPU availability
 component = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 model = model.to(component)
-X_train = X_train.to(component)
-y_train = y_train.to(component)
-
-# print('---------------------------')
-# print(input_size)
-# print('---------------------------')
+X_train = Xtrain.to(component)
+y_train = ytrain.to(component)
 
 # Define loss function and optimizer
 criterion = nn.BCELoss()            # *Binary Cross Entropy loss measures the difference between predicted probabilities (scores) and the actual binary label. 
@@ -134,7 +129,6 @@ y_test = y_test.to(component)
 testX = pad_sequence([X_test[i:i+timeStep] for i in range(0, len(X_test), timeStep)], batch_first=True)
 testY = pad_sequence([y_test[i:i+timeStep] for i in range(0, len(y_test), timeStep)], batch_first=True)
 
-
 # Evaluate the model
 model.eval()                                            #* explicity set the mode to evaluation
 
@@ -162,4 +156,4 @@ with torch.no_grad():
     # prints loss and accuracy
     average_test_loss = test_loss / (len(X_test) // timeStep)
     accuracy = correct / totSample
-    print(f'Test Loss: {average_test_loss}, Test Accuracy: {accuracy}')
+    print(f'Test Loss: {average_test_loss}, Test Accuracy: {accuracy}%')
