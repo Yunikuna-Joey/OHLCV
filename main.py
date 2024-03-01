@@ -156,4 +156,4 @@ with torch.no_grad():
     # prints loss and accuracy
     average_test_loss = test_loss / (len(Xeval) // timeStep)
     accuracy = correct / totSample
-    print(f'Test Loss: {average_test_loss}, Test Accuracy: {accuracy}%')
+    print(f'Evaluation Accuracy: {accuracy}%, Evaluation Loss: {average_test_loss}')
