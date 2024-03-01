@@ -43,6 +43,7 @@ df = pd.read_csv('./data/AAPL.csv')
 # normalize the values using the formula z standardized score = (original value - mean) / standard deviation of data 
 normdf = (df[['Open', 'High', 'Low', 'Close', 'Volume']] - df[['Open', 'High', 'Low', 'Close', 'Volume']].mean()) / df[['Open', 'High', 'Low', 'Close', 'Volume']].std()
 # print(normdf.head())
+print('This is type for norm data', type(normdf))       #* pandas.core.frame.DataFrame type
 
 #* define time step (what is equal to 1 time step) in this case we are doing 14 days (2 weeks) worth of data is == 1 time step
 timeStep = 14
