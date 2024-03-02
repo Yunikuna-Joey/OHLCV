@@ -71,6 +71,10 @@ print(f'This is y {y}')
 
 # Split the data into training and testing sets
 Xtrain, Xeval, ytrain, yeval = train_test_split(X, y, test_size=0.2, random_state=42)
+# print(f'This is xTrain shape {Xtrain.shape}')
+# print(f'This is xTrain shape {ytrain.shape}')
+# print(f'This is xTrain shape {Xeval.shape}')
+# print(f'This is xTrain shape {yeval.shape}')
 
 # Instantiate the model
 input_size = X.shape[2]             #* X.shape [(batch_size) - number of sequences, (sequence_len) - how much in 1 individual sequence, (num_features) - columns of data ] 

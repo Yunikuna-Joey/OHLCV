@@ -65,6 +65,11 @@ x, y = torch.tensor(xData, dtype=torch.float32), torch.tensor(yData, dtype=torch
 
 #* Split the data into training and evaluating sets 
 xTrain, yTrain, xEval, yEval = train_test_split(x, y, test_size=0.2, random_state=18)
+print(f'This is xTrain shape {xTrain.shape}')
+print(f'This is xTrain shape {yTrain.shape}')
+print(f'This is xTrain shape {xEval.shape}')
+print(f'This is xTrain shape {yEval.shape}')
+
 
 #* Instantiate the LSTM Model 
 inputSize = x.shape[1]
@@ -100,8 +105,8 @@ for epoch in range(epochNum):
 
     for xBatch, yBatch in zip(xPad, yPad):
         # print('****************************')
-        # print(f'This is inputs {xBatch.shape}')
-        # print(f'This is target {yBatch.shape}')
+        # print(f'This is inputs {xBatch}')
+        # print(f'This is target {yBatch}')
 
         # forward pass into the model
         output = model(xBatch)
@@ -127,6 +132,9 @@ for epoch in range(epochNum):
 xEval = xEval.to(component)
 yEval = yEval.to(component)
 
+print(f'This is xEval shape {xEval.shape}')
+print(f'This is yEval shape {yEval.shape}')
+
 xEvalPad = pad_sequence([xEval[i:i + timestep] for i in range(0, len(xEval), timestep)], batch_first=True)
 yEvalPad = pad_sequence([yEval[i:i + timestep] for i in range(0, len(yEval), timestep)], batch_first=True)
 
@@ -140,6 +148,11 @@ with torch.no_grad():
     totSample = 0 
 
     for xBatch, yBatch, in zip(xEvalPad, yEvalPad): 
+        print(f'This is xBatch {xBatch}')
+        print(f'This is xbatch shape {xBatch.shape}')
+        print(f'This is yBatch {yBatch}')
+        print(f'This is yBatch shape {yBatch.shape}')
+
         # pass the data forward
         output = model(xBatch)
 
