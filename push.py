@@ -132,8 +132,6 @@ for epoch in range(epochNum):
 xEval = xEval.to(component)
 yEval = yEval.to(component)
 
-print(f'This is xEval shape {xEval.shape}')
-print(f'This is yEval shape {yEval.shape}')
 
 xEvalPad = pad_sequence([xEval[i:i + timestep] for i in range(0, len(xEval), timestep)], batch_first=True)
 yEvalPad = pad_sequence([yEval[i:i + timestep] for i in range(0, len(yEval), timestep)], batch_first=True)
@@ -148,13 +146,8 @@ with torch.no_grad():
     totSample = 0 
 
     for xBatch, yBatch, in zip(xEvalPad, yEvalPad): 
-        print(f'This is xBatch {xBatch}')
-        print(f'This is xbatch shape {xBatch.shape}')
-        print(f'This is yBatch {yBatch}')
-        print(f'This is yBatch shape {yBatch.shape}')
-
-        # pass the data forward
-        output = model(xBatch)
+        # pass the data forward [add a batch dimension here]
+        output = model(xBatch.unsqueeze(0))
 
         # calculate the loss from the predicted to the expected answer
         loss = criterion(output.squeeze(), yBatch)
