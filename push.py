@@ -74,7 +74,7 @@ print(f'This is xTrain shape {yEval.shape}')
 #* Instantiate the LSTM Model 
 inputSize = x.shape[1]
 # hidden layer size 
-hiddenSize = 100 
+hiddenSize = 200 
 # for binary classification, we only want 0 or 1 indicating yes/no up/down
 outputSize = 14
 model = LSTM(inputSize, hiddenSize, outputSize)
@@ -94,7 +94,7 @@ xPad = pad_sequence([xTrain[i:i + timestep] for i in range(0, len(xTrain), times
 yPad = pad_sequence([yTrain[i:i + timestep] for i in range(0, len(yTrain), timestep)], batch_first=True)
 
 
-epochNum = 25
+epochNum = 50
 
 for epoch in range(epochNum): 
     # Explicitly set into training mode
@@ -160,5 +160,6 @@ with torch.no_grad():
         totSample += len(yBatch)
 
     evalLoss = totLoss / (len(xEval) // timestep)
+    print(f'This is correct {correct} and this is totSample {totSample}') 
     accuracy = correct / totSample
-    print(f'Evaluation Accuracy: {accuracy}%, Evaluation Loss: {evalLoss}')
+    print(f'Evaluation Accuracy: {accuracy * 100}%, Evaluation Loss: {evalLoss}')
