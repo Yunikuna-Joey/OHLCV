@@ -6,12 +6,14 @@ from lumibot.traders import Trader                      #* Deployment abilities
 from datetime import datetime
 from timedelta import Timedelta
 from alpaca_trade_api import REST 
+from util import estimate_sentiment
 
 from dotenv import load_dotenv
 load_dotenv()
 
 import os
 
+#* create your .env file and obtain through using os package
 CRED = {
     'API_KEY': os.getenv('KEY'), 
     'API_SECRET': os.getenv('SECRET'), 
@@ -48,24 +50,29 @@ class MLAITrader(Strategy):
         # return both values 
         return today.strftime('%Y-%m-%d'), priorDays.strftime('%Y-%m-%d')
 
-    def getNews(self): 
+    def getSentiment(self): 
         today, priorDays = self.getDate()
         # utilize the alpaca api to 'get news' 
         news = self.api.get_news(symbol=self.symbol, start=priorDays, end=today)
         # format our news for each news event, obtain the headline from the results above
         news = [event.__dict__['_raw']['headline'] for event in news]
-        return news
+        # return the values of our sentiment and its probability 
+        probability, sentiment = estimate_sentiment(news)
+        return probability, sentiment
 
     #* every tick of time/ data that is received, a trade can be made
     def on_trading_iteration(self):
         # dynamically cast how much to buy 
         cash, lastPrice, quant = self.positionSizing()
+        probability, sentiment = self.getSentiment()
 
         # only purchase if we have enough cash balance
         if cash > lastPrice: 
-            if self.lastTrade == None: 
-                news = self.getNews()
-                print(news)
+            # given the sentiment of the news, if it is good and its probability is .999 good, then create a BUY order
+            if sentiment == 'positive' and probability > .999: 
+                # if there are existing sell orders and the market is positive
+                if self.lastTrade == 'sell': 
+                    self.sell_all()
                 # creating the order
                 order = self.create_order(
                     # involves the symbol
@@ -78,11 +85,29 @@ class MLAITrader(Strategy):
                     # limit, 
                     #* bracket has a lower and upper bound for stop loss and take profit respectively   
                     type='bracket',            
-                    take_profit_price=lastPrice*1.20, 
-                    stop_loss_price=lastPrice*0.95
+                    take_profit_price=lastPrice * 1.20, 
+                    stop_loss_price=lastPrice * 0.95
                 )
                 self.submit_order(order)
+                # update our action
                 self.lastTrade = 'buy'
+
+            elif sentiment == 'negative' and probability > .999:
+                if self.lastTrade == 'buy': 
+                    pass
+                order = self.create_order(
+                    #i involves the symbol
+                    self.symbol, 
+                    # amount of shares being sold 
+                    quant, 
+                    'sell', 
+                    type='bracket', 
+                    take_profit_price=lastPrice * 0.8, 
+                    stop_loss_price=lastPrice * 1.05
+                )   
+                self.submit_order(order)
+                # update our action 
+                self.lastTrade = 'sell'
 
 #* create our broker object 
 broker = Alpaca(CRED)
@@ -90,6 +115,16 @@ broker = Alpaca(CRED)
 strategy = MLAITrader(name='mlaistrat', broker=broker, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
 
 #* catch time specific time frame to use for testing MLAI
-startDate, endDate = datetime(2023, 1, 1), datetime(2023, 12, 31)     #* Y-M-D
-#* how well our bot is running {guess}
+startDate, endDate = datetime(2020, 1, 1), datetime(2023, 12, 31)     #* Y-M-D
+
+#* how well our bot is running {comment this line out if you are deploying into live trading}
 strategy.backtest(YahooDataBacktesting, startDate, endDate, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
+
+
+#* ------------------- deployment into your brokerage purposes -------------------
+#* Create our trader object 
+# trader = Trader()
+#* Add the strategy into the trader object 
+# trader.add_strategy(strategy)
+#* deploy 
+# trader.run_all()
