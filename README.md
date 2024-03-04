@@ -10,3 +10,6 @@
 - Sidebar: use the appropriate pytorch for your operating system. This command can be found on the pytorch site and clicking/matching your OS options
 3) 'pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118'
 4) 'pip install scikit-learn'
+
+5) 'pip install lumibot==2.9.13'
+6) ''
