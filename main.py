@@ -4,6 +4,8 @@ from lumibot.backtesting import YahooDataBacktesting    #* framework for backtes
 from lumibot.strategies.strategy import Strategy        #* bot platform
 from lumibot.traders import Trader                      #* Deployment abilities
 from datetime import datetime
+from timedelta import Timedelta
+from alpaca_trade_api import REST 
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -26,6 +28,8 @@ class MLAITrader(Strategy):
         self.lastTrade = None
         # the ammount of cash our bot is willing to risk, .5 == half of our portfolio cash balance 
         self.cashAtRisk = cashAtRisk
+        # provides the api object into our MLAI strategy 
+        self.api = REST(base_url=os.getenv('URL'), key_id=os.getenv('KEY'), secret_key=os.getenv('SECRET'))
 
     def positionSizing(self):
         # this will allow for the bot to grab its cash value of portfolio
@@ -36,6 +40,22 @@ class MLAITrader(Strategy):
         quant = cash * self.cashAtRisk // lastPrice     #* $1000 example => 1000 * 0.5 = 500 / lastPrice of stock == amt of shares 
         return cash, lastPrice, quant
 
+    def getDate(self): 
+        # today refers to the day of training / backtesting 
+        today = self.get_datetime()
+        # back track 4 days 
+        priorDays = today - Timedelta(days=4)
+        # return both values 
+        return today.strftime('%Y-%m-%d'), priorDays.strftime('%Y-%m-%d')
+
+    def getNews(self): 
+        today, priorDays = self.getDate()
+        # utilize the alpaca api to 'get news' 
+        news = self.api.get_news(symbol=self.symbol, start=priorDays, end=today)
+        # format our news for each news event, obtain the headline from the results above
+        news = [event.__dict__['_raw']['headline'] for event in news]
+        return news
+
     #* every tick of time/ data that is received, a trade can be made
     def on_trading_iteration(self):
         # dynamically cast how much to buy 
@@ -44,6 +64,8 @@ class MLAITrader(Strategy):
         # only purchase if we have enough cash balance
         if cash > lastPrice: 
             if self.lastTrade == None: 
+                news = self.getNews()
+                print(news)
                 # creating the order
                 order = self.create_order(
                     # involves the symbol

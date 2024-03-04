@@ -12,4 +12,4 @@
 4) 'pip install scikit-learn'
 
 5) 'pip install lumibot==2.9.13'
-6) ''
+6) 'pip install alpaca-trade-api==3.1.1'
