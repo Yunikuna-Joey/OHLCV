@@ -94,7 +94,7 @@ class MLAITrader(Strategy):
 
             elif sentiment == 'negative' and probability > .999:
                 if self.lastTrade == 'buy': 
-                    pass
+                    self.sell_all()
                 order = self.create_order(
                     #i involves the symbol
                     self.symbol, 
