@@ -11,6 +11,7 @@
 3) 'pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118'
 4) 'pip install scikit-learn'
 
-5) 'pip install lumibot==2.9.13'
-6) 'pip install alpaca-trade-api==3.1.1'
-7) 'pip install torch torchvision torchaudio transformers'
+5) 'pip install timedelta'
+6) 'pip install lumibot==2.9.13'
+7) 'pip install alpaca-trade-api==3.1.1'
+8) 'pip install torch torchvision torchaudio transformers'
