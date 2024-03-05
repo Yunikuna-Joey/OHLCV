@@ -23,7 +23,7 @@ CRED = {
 #* trading logic here 
 class MLAITrader(Strategy):
     #* setup 
-    def initialize(self, symbol:str='AAPL', cashAtRisk:float=.5): 
+    def initialize(self, symbol:str='BTC-USD', cashAtRisk:float=.9): 
         self.symbol = symbol
         # how frequent are we trading 
         self.sleeptime = '24H'
@@ -56,8 +56,10 @@ class MLAITrader(Strategy):
         news = self.api.get_news(symbol=self.symbol, start=priorDays, end=today)
         # format our news for each news event, obtain the headline from the results above
         news = [event.__dict__['_raw']['headline'] for event in news]
+        print(news)
         # return the values of our sentiment and its probability 
         probability, sentiment = estimate_sentiment(news)
+        print(probability, sentiment)
         return probability, sentiment
 
     #* every tick of time/ data that is received, a trade can be made
@@ -69,7 +71,7 @@ class MLAITrader(Strategy):
         # only purchase if we have enough cash balance
         if cash > lastPrice: 
             # given the sentiment of the news, if it is good and its probability is .999 good, then create a BUY order
-            if sentiment == 'positive' and probability > .999: 
+            if sentiment == 'positive' and probability > .200: 
                 # if there are existing sell orders and the market is positive
                 if self.lastTrade == 'sell': 
                     self.sell_all()
@@ -92,7 +94,7 @@ class MLAITrader(Strategy):
                 # update our action
                 self.lastTrade = 'buy'
 
-            elif sentiment == 'negative' and probability > .999:
+            elif sentiment == 'negative' and probability > .200:
                 if self.lastTrade == 'buy': 
                     self.sell_all()
                 order = self.create_order(
@@ -112,13 +114,13 @@ class MLAITrader(Strategy):
 #* create our broker object 
 broker = Alpaca(CRED)
 #* create an instance of strategy 
-strategy = MLAITrader(name='mlaistrat', broker=broker, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
+strategy = MLAITrader(name='mlaistrat', broker=broker, parameters={'symbol':'BTC-USD', 'cashAtRisk': .9})
 
 #* catch time specific time frame to use for testing MLAI
-startDate, endDate = datetime(2000, 1, 1), datetime(2023, 12, 31)     #* Y-M-D
+startDate, endDate = datetime(2023, 9, 1), datetime(2023, 12, 31)     #* Y-M-D
 
 #* how well our bot is running {comment this line out if you are deploying into live trading}
-strategy.backtest(YahooDataBacktesting, startDate, endDate, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
+strategy.backtest(YahooDataBacktesting, startDate, endDate, parameters={'symbol':'BTC-USD', 'cashAtRisk': .9})
 
 
 #* ------------------- deployment into your brokerage purposes -------------------
