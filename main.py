@@ -23,7 +23,7 @@ CRED = {
 #* trading logic here 
 class MLAITrader(Strategy):
     #* setup 
-    def initialize(self, symbol:str='NVDA', cashAtRisk:float=.5): 
+    def initialize(self, symbol:str='AAPL', cashAtRisk:float=.5): 
         self.symbol = symbol
         # how frequent are we trading 
         self.sleeptime = '24H'
@@ -112,13 +112,13 @@ class MLAITrader(Strategy):
 #* create our broker object 
 broker = Alpaca(CRED)
 #* create an instance of strategy 
-strategy = MLAITrader(name='mlaistrat', broker=broker, parameters={'symbol':'NVDA', 'cashAtRisk': .5})
+strategy = MLAITrader(name='mlaistrat', broker=broker, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
 
 #* catch time specific time frame to use for testing MLAI
-startDate, endDate = datetime(2020, 1, 1), datetime(2023, 12, 31)     #* Y-M-D
+startDate, endDate = datetime(2000, 1, 1), datetime(2023, 12, 31)     #* Y-M-D
 
 #* how well our bot is running {comment this line out if you are deploying into live trading}
-strategy.backtest(YahooDataBacktesting, startDate, endDate, parameters={'symbol':'NVDA', 'cashAtRisk': .5})
+strategy.backtest(YahooDataBacktesting, startDate, endDate, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
 
 
 #* ------------------- deployment into your brokerage purposes -------------------
