@@ -50,34 +50,59 @@ class MLAITrader(Strategy):
         # return both values 
         return today.strftime('%Y-%m-%d'), priorDays.strftime('%Y-%m-%d')
 
-    def getSentiment(self, tickers): 
-        data = {}
+    # def getSentiment(self, tickers): 
+    #     data = {}
+    #     today, priorDays = self.getDate() 
+    #     for ticker in tickers: 
+    #         news = self.api.get_news(symbol=ticker, start=priorDays, end=today)
+    #         news = [event.__dict__['_raw']['headline'] for event in news]
+    #         probability, sentiment = estimate_sentiment(news)
+    #         data[ticker] = {'probability': probability, 'sentiment': sentiment}
+
+    #     return data 
+
+    # def on_trading_iteration(self):
+    #     array = ['AAPL', 'GOOGL', 'MSFT', 'NVDA']
+    #     # grab sentiment values for news for these tickers 
+    #     values = self.getSentiment(array)
+
+    #     for ticker in array: 
+    #         probability, sentiment = values[ticker]['probability'], values[ticker]['sentiment']
+
+
+    def getSentiment(self): 
+        today, priorDays = self.getDate()
+        # utilize the alpaca api to 'get news' 
+        news = self.api.get_news(symbol=self.symbol, start=priorDays, end=today)                    #* get_news is not supported on crpyto
+        # format our news for each news event, obtain the headline from the results above
+        news = [event.__dict__['_raw']['headline'] for event in news]
+        print(news)
+        # return the values of our sentiment and its probability 
+        probability, sentiment = estimate_sentiment(news)
+        print(probability, sentiment)
+        return probability, sentiment
+
+    def helperSentiment(self, ticker): 
         today, priorDays = self.getDate() 
-        for ticker in tickers: 
-            news = self.api.get_news(symbol=ticker, start=priorDays, end=today)
-            news = [event.__dict__['_raw']['headline'] for event in news]
-            probability, sentiment = estimate_sentiment(news)
-            data[ticker] = {'probability': probability, 'sentiment': sentiment}
+        
+        news = self.api.get_news(symbol=ticker, start=priorDays, end=today)
+        news = [event.__dict__['_raw']['headline'] for event in news]
+        prob, senti = estimate_sentiment(news)
 
-        return data 
-    
-    # def getSentiment(self): 
-    #     today, priorDays = self.getDate()
-    #     # utilize the alpaca api to 'get news' 
-    #     news = self.api.get_news(symbol=self.symbol, start=priorDays, end=today)                    #* get_news is not supported on crpyto
-    #     # format our news for each news event, obtain the headline from the results above
-    #     news = [event.__dict__['_raw']['headline'] for event in news]
-    #     print(news)
-    #     # return the values of our sentiment and its probability 
-    #     probability, sentiment = estimate_sentiment(news)
-    #     print(probability, sentiment)
-    #     return probability, sentiment
+        return prob, senti
 
-    #* every tick of time/ data that is received, a trade can be made
+    # * every tick of time/ data that is received, a trade can be made
     def on_trading_iteration(self):
         # dynamically cast how much to buy 
         cash, lastPrice, quant = self.positionSizing()
         probability, sentiment = self.getSentiment()
+
+        # helper1 
+        prob1, senti1 = self.helperSentiment('GOOGL')
+        # helper2 
+        prob2, senti2 = self.helperSentiment('MSFT')
+        # # helper3
+        # prob3, senti3 = self.helperSentiment('NVDA')
 
         # only purchase if we have enough cash balance
         if cash > lastPrice: 
@@ -123,7 +148,7 @@ class MLAITrader(Strategy):
                 self.lastTrade = 'sell'
 
             #* testing new logic that will promote a more proactive approach when encountering neutral sentitment during a time frame
-            elif sentiment == 'neutral' and probability < .750: 
+            elif (sentiment == 'neutral' and probability < .750) and ((senti1 == 'positive' and prob1 > .800) or (senti2 == 'positive' and prob2 > .800)): 
                 order = self.create_order(
                     self.symbol, 
                     quant, 
@@ -143,7 +168,7 @@ broker = Alpaca(CRED)
 strategy = MLAITrader(name='mlaistrat', broker=broker, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
 
 #* catch time specific time frame to use for testing MLAI
-startDate, endDate = datetime(2021, 1, 1), datetime(2023, 12, 31)     #* Y-M-D.. with AAPL, the first news rolled in the year 2015.. test ranges [2015 - 2019] [2021 - 2023]
+startDate, endDate = datetime(2023, 9, 1), datetime(2023, 12, 31)     #* Y-M-D.. with AAPL, the first news rolled in the year 2015.. test ranges [2015 - 2019] [2021 - 2023]
 
 #* how well our bot is running {comment this line out if you are deploying into live trading}
 strategy.backtest(YahooDataBacktesting, startDate, endDate, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
