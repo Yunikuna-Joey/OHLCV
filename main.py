@@ -23,7 +23,7 @@ CRED = {
 #* trading logic here 
 class MLAITrader(Strategy):
     #* setup 
-    def initialize(self, symbol:str='BTC-USD', cashAtRisk:float=.9): 
+    def initialize(self, symbol:str='AAPL', cashAtRisk:float=.5): 
         self.symbol = symbol
         # how frequent are we trading 
         self.sleeptime = '24H'
@@ -53,7 +53,7 @@ class MLAITrader(Strategy):
     def getSentiment(self): 
         today, priorDays = self.getDate()
         # utilize the alpaca api to 'get news' 
-        news = self.api.get_news(symbol=self.symbol, start=priorDays, end=today)
+        news = self.api.get_news(symbol=self.symbol, start=priorDays, end=today)                    #* get_news is not supported on crpyto
         # format our news for each news event, obtain the headline from the results above
         news = [event.__dict__['_raw']['headline'] for event in news]
         print(news)
@@ -71,7 +71,7 @@ class MLAITrader(Strategy):
         # only purchase if we have enough cash balance
         if cash > lastPrice: 
             # given the sentiment of the news, if it is good and its probability is .999 good, then create a BUY order
-            if sentiment == 'positive' and probability > .200: 
+            if sentiment == 'positive' and probability > .999: 
                 # if there are existing sell orders and the market is positive
                 if self.lastTrade == 'sell': 
                     self.sell_all()
@@ -94,7 +94,7 @@ class MLAITrader(Strategy):
                 # update our action
                 self.lastTrade = 'buy'
 
-            elif sentiment == 'negative' and probability > .200:
+            elif sentiment == 'negative' and probability > .999:
                 if self.lastTrade == 'buy': 
                     self.sell_all()
                 order = self.create_order(
@@ -111,17 +111,37 @@ class MLAITrader(Strategy):
                 # update our action 
                 self.lastTrade = 'sell'
 
+            #* testing new logic that will promote a more proactive approach when encountering neutral sentitment during a time frame
+            elif sentiment == 'neutral' and probability < .750: 
+                order = self.create_order(
+                    self.symbol, 
+                    quant, 
+                    'buy', 
+                    type='bracket', 
+                    take_profit_price=lastPrice * 1.25,
+                    stop_loss_price=lastPrice * 0.90
+                )
+                self.submit_order(order)
+                self.lastTrade = 'buy'
+
+
+
 #* create our broker object 
 broker = Alpaca(CRED)
 #* create an instance of strategy 
-strategy = MLAITrader(name='mlaistrat', broker=broker, parameters={'symbol':'BTC-USD', 'cashAtRisk': .9})
+strategy = MLAITrader(name='mlaistrat', broker=broker, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
 
 #* catch time specific time frame to use for testing MLAI
-startDate, endDate = datetime(2023, 9, 1), datetime(2023, 12, 31)     #* Y-M-D
+startDate, endDate = datetime(2021, 1, 1), datetime(2023, 12, 31)     #* Y-M-D.. with AAPL, the first news rolled in the year 2015.. test ranges [2015 - 2019] [2021 - 2023]
 
 #* how well our bot is running {comment this line out if you are deploying into live trading}
-strategy.backtest(YahooDataBacktesting, startDate, endDate, parameters={'symbol':'BTC-USD', 'cashAtRisk': .9})
+strategy.backtest(YahooDataBacktesting, startDate, endDate, parameters={'symbol':'AAPL', 'cashAtRisk': .5})
 
+#* ---- TESTING ----
+# change symbol in 3 places 
+# change cashAtRisk in 3 places 
+# change probability on sentiment to act on 
+# change stop loss and take profit on BOTH sell and buy orders
 
 #* ------------------- deployment into your brokerage purposes -------------------
 #* Create our trader object 
