@@ -50,17 +50,28 @@ class MLAITrader(Strategy):
         # return both values 
         return today.strftime('%Y-%m-%d'), priorDays.strftime('%Y-%m-%d')
 
-    def getSentiment(self): 
-        today, priorDays = self.getDate()
-        # utilize the alpaca api to 'get news' 
-        news = self.api.get_news(symbol=self.symbol, start=priorDays, end=today)                    #* get_news is not supported on crpyto
-        # format our news for each news event, obtain the headline from the results above
-        news = [event.__dict__['_raw']['headline'] for event in news]
-        print(news)
-        # return the values of our sentiment and its probability 
-        probability, sentiment = estimate_sentiment(news)
-        print(probability, sentiment)
-        return probability, sentiment
+    def getSentiment(self, tickers): 
+        data = {}
+        today, priorDays = self.getDate() 
+        for ticker in tickers: 
+            news = self.api.get_news(symbol=ticker, start=priorDays, end=today)
+            news = [event.__dict__['_raw']['headline'] for event in news]
+            probability, sentiment = estimate_sentiment(news)
+            data[ticker] = {'probability': probability, 'sentiment': sentiment}
+
+        return data 
+    
+    # def getSentiment(self): 
+    #     today, priorDays = self.getDate()
+    #     # utilize the alpaca api to 'get news' 
+    #     news = self.api.get_news(symbol=self.symbol, start=priorDays, end=today)                    #* get_news is not supported on crpyto
+    #     # format our news for each news event, obtain the headline from the results above
+    #     news = [event.__dict__['_raw']['headline'] for event in news]
+    #     print(news)
+    #     # return the values of our sentiment and its probability 
+    #     probability, sentiment = estimate_sentiment(news)
+    #     print(probability, sentiment)
+    #     return probability, sentiment
 
     #* every tick of time/ data that is received, a trade can be made
     def on_trading_iteration(self):
